@@ -49,7 +49,11 @@ class EmotionPredict:
 
         return cls(**emotion_scores)
 
-def emotion_detector(text_to_analyze: str) -> dict[str, Decimal | str]:
+def emotion_detector(
+    text_to_analyze: str,
+    *,
+    convert_to_dict: bool = True,
+) -> dict[str, Decimal | str]:
     function_url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
     headers = {
         "grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"
@@ -60,4 +64,8 @@ def emotion_detector(text_to_analyze: str) -> dict[str, Decimal | str]:
         },
     }
     response = requests.post(function_url, json=json_data, headers=headers)
-    return EmotionPredict.from_func_response(response.text).to_dict()
+    emotion_predict = EmotionPredict.from_func_response(response.text)
+    
+    if convert_to_dict:
+        return emotion_predict.to_dict()
+    return emotion_predict
