@@ -15,6 +15,9 @@ def detect_emotion():
     text_to_analyze = request.args.get("textToAnalyze", "").strip()
     predictions = emotion_detector(text_to_analyze)
 
+    if predictions.is_empty():
+        return "Invalid text! Please try again!", 400
+
     return (
         "For the given statement, the system response is "
         f"'anger': {predictions.anger}, 'disgust': {predictions.disgust},"
