@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import requests
 import json
+from decimal import Decimal
+from typing import Literal, overload
+
+import requests
 from attrs import define, field
 from attrs.setters import frozen
-from decimal import Decimal
-from typing import overload, Literal
+
 
 def to_decimal_or_none(value: float | None) -> Decimal | None:
     if value is None:
@@ -13,13 +15,24 @@ def to_decimal_or_none(value: float | None) -> Decimal | None:
 
     return Decimal(str(value)).quantize(Decimal("0.00001"))
 
+
 @define(kw_only=True)
 class EmotionPredict:
-    anger: Decimal | None = field(default=None, converter=to_decimal_or_none, on_setattr=frozen)
-    disgust: Decimal | None = field(default=None, converter=to_decimal_or_none, on_setattr=frozen)
-    fear: Decimal | None = field(default=None, converter=to_decimal_or_none, on_setattr=frozen)
-    joy: Decimal | None = field(default=None, converter=to_decimal_or_none, on_setattr=frozen)
-    sadness: Decimal | None = field(default=None, converter=to_decimal_or_none, on_setattr=frozen)
+    anger: Decimal | None = field(
+        default=None, converter=to_decimal_or_none, on_setattr=frozen
+    )
+    disgust: Decimal | None = field(
+        default=None, converter=to_decimal_or_none, on_setattr=frozen
+    )
+    fear: Decimal | None = field(
+        default=None, converter=to_decimal_or_none, on_setattr=frozen
+    )
+    joy: Decimal | None = field(
+        default=None, converter=to_decimal_or_none, on_setattr=frozen
+    )
+    sadness: Decimal | None = field(
+        default=None, converter=to_decimal_or_none, on_setattr=frozen
+    )
 
     dominant_emotion: str | None = field(default=None, init=False)
 
@@ -28,7 +41,9 @@ class EmotionPredict:
         if all(value is not None for value in emotion_scores.values()):
             self.dominant_emotion = max(emotion_scores, key=emotion_scores.get)
         elif not all(value is None for value in emotion_scores.values()):
-            raise ValueError("Invalid initialization: either all emotion scores must be provided or none")
+            raise ValueError(
+                "Invalid initialization: either all emotion scores must be provided or none"
+            )
 
     @property
     def scores(self) -> dict[str, Decimal | None]:
@@ -53,7 +68,9 @@ class EmotionPredict:
             parsed_data = json.loads(data)
             emotion_scores = parsed_data["emotionPredictions"][0]["emotion"]
         except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            raise ValueError("Invalid response received from the Emotion Predict function") from exc
+            raise ValueError(
+                "Invalid response received from the Emotion Predict function"
+            ) from exc
 
         return cls(**emotion_scores)
 
@@ -64,13 +81,13 @@ class EmotionPredict:
     def is_empty(self) -> bool:
         return all(value is None for value in self.to_dict().values())
 
+
 @overload
 def emotion_detector(
     text_to_analyze: str,
     *,
     convert_to_dict: Literal[False] = False,
-) -> EmotionPredict:
-    ...
+) -> EmotionPredict: ...
 
 
 @overload
@@ -78,8 +95,7 @@ def emotion_detector(
     text_to_analyze: str,
     *,
     convert_to_dict: Literal[True],
-) -> dict[str, Decimal | str | None]:
-    ...
+) -> dict[str, Decimal | str | None]: ...
 
 
 def emotion_detector(
@@ -87,10 +103,8 @@ def emotion_detector(
     *,
     convert_to_dict: bool = False,
 ) -> EmotionPredict | dict[str, Decimal | str | None]:
-    function_url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
-    headers = {
-        "grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"
-    }
+    function_url = "https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict"
+    headers = {"grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"}
     json_data = {
         "raw_document": {
             "text": text_to_analyze,
